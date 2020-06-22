@@ -1,14 +1,16 @@
 from urllib.request import urlopen
 from urllib import parse
 from bs4 import BeautifulSoup
+import os
 import re
 import time
 import random
 import datetime
+import argparse
 import pandas as pd
 
 
-def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=1, field=1):
+def crawler(query, begin, end, sleep, page_lmit, sort, field, save_path):
     '''
     :param query:
     :param begin:
@@ -60,7 +62,7 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=1, field=1):
         atags = bsobj.find("div", {"class": "paging"}).find_all("a")
         max_page = max([int(atag["href"].split('start=')[1]) for atag in atags])
         page += 10
-        if page > page_lmit:
+        if page_lmit and (page > page_lmit):
             break
 
         # sleep
@@ -75,7 +77,7 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=1, field=1):
         }
         df = pd.DataFrame(result)
         df = df.sort_values(by=['date'])
-        df.to_excel(query + '.xlsx')
+        df.to_excel(save_path + query + '.xlsx')
 
 
 def get_news(url):
@@ -112,4 +114,37 @@ def get_news(url):
 
 
 if __name__ == '__main__':
-    crawler("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
+    # Argument configuration
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
+    parser.add_argument('--begin', type=str, required=True, help='crawling begin point')
+    parser.add_argument('--end', type=str, required=True, help='crawling end point')
+    parser.add_argument('--path', type=str, default='results/', help='saving path for crawling results')
+    parser.add_argument('--limit', type=int, default=0, help='crawling page limit on single query, 0 for no limit')
+    parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
+    parser.add_argument('--field', type=int, default=1, help='search field: 0(all), 1(title)')
+    parser.add_argument('--sleep', type=float, default=1., help='sleep interval between requests')
+    args = parser.parse_args()
+
+    query = args.query
+    begin = args.begin
+    end = args.end
+    path = args.path
+    limit = args.limit
+    sort = args.sort
+    field = args.field
+    sleep = args.sleep
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    crawler(query,
+            begin,
+            end,
+            sleep=sleep,
+            page_lmit=limit,
+            sort=sort,
+            field=field,
+            save_path=path)
+
+    # crawler("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
