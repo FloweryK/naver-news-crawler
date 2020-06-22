@@ -10,7 +10,7 @@ import argparse
 import pandas as pd
 
 
-def crawler(query, begin, end, sleep, page_lmit, sort, field, save_path):
+def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_path='results/'):
     '''
     :param query:
     :param begin:
@@ -50,13 +50,16 @@ def crawler(query, begin, end, sleep, page_lmit, sort, field, save_path):
         # get urls which is included as '네이버뉴스'
         for obj in bsobj.select("._sp_each_url"):
             url = obj['href']
-            if 'https://news.naver.com' in url:
-                title, date, article = get_news(url)
+            try:
+                if 'https://news.naver.com' in url:
+                    title, date, article = get_news(url)
 
-                links.append(url)
-                titles.append(title)
-                dates.append(date)
-                articles.append(article)
+                    links.append(url)
+                    titles.append(title)
+                    dates.append(date)
+                    articles.append(article)
+            except Exception as e:
+                print('crawling failed at:', url, '(maybe the page is redirected to entertainment section)')
 
         # get next page
         atags = bsobj.find("div", {"class": "paging"}).find_all("a")
@@ -147,4 +150,5 @@ if __name__ == '__main__':
             field=field,
             save_path=path)
 
+    # crawler("아이유", "2020.01.01", "2020.06.22")
     # crawler("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
