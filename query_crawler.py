@@ -119,8 +119,6 @@ def get_news(url):
 if __name__ == '__main__':
     # Today
     today = datetime.datetime.now().strftime('%Y.%m.%d')
-    print(today)
-    time.sleep(10000)
 
     # Argument configuration
     parser = argparse.ArgumentParser()
