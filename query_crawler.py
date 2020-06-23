@@ -30,7 +30,7 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_p
     page = 1
     max_page = 2
     while page <= max_page:
-        print('crawling... %s page %i/%i' % (query, 1+page//10, 1+max_page//10))
+        print('\n' + 'crawling... %s (page %i/%i)' % (query, 1+page//10, 1+max_page//10))
 
         # make url
         url = "https://search.naver.com/search.naver?&where=news&query=" + parse.quote(query)
@@ -117,11 +117,16 @@ def get_news(url):
 
 
 if __name__ == '__main__':
+    # Today
+    today = datetime.datetime.now().strftime('%Y.%m.%d')
+    print(today)
+    time.sleep(10000)
+
     # Argument configuration
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
-    parser.add_argument('--begin', type=str, required=True, help='crawling begin point')
-    parser.add_argument('--end', type=str, required=True, help='crawling end point')
+    parser.add_argument('--begin', type=str, default='2020.01.01', help='crawling begin point')
+    parser.add_argument('--end', type=str, default=today, help='crawling end point')
     parser.add_argument('--path', type=str, default='results/', help='saving path for crawling results')
     parser.add_argument('--limit', type=int, default=0, help='crawling page limit on single query, 0 for no limit')
     parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
