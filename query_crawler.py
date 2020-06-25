@@ -16,7 +16,7 @@ import argparse
 import pandas as pd
 
 
-def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_path='results/'):
+def crawl(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_path='results/'):
     '''
     :param query:
     :param begin:
@@ -28,14 +28,23 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_p
     :return:
     '''
 
+    # make empty lists for saving results
     links = []
     titles = []
     dates = []
     articles = []
 
+    # initial page and max page
     page = 1
     max_page = 2
+
     while page <= max_page:
+        if page_lmit and (page > page_lmit):
+            print('page limit exceeded: page(%i) > page_limit(%i)' % (page, page_lmit))
+            break
+
+        # sleep
+        time.sleep(sleep + random.random() + 0.5)
         print('\n' + 'crawling... %s (page %i/%i)' % (query, 1+page//10, 1+max_page//10))
 
         # make url
@@ -67,17 +76,8 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_p
             except Exception as e:
                 print('crawling failed at:', url, '(maybe the page is redirected to entertainment section)')
 
-        # get next page
-        atags = bsobj.find("div", {"class": "paging"}).find_all("a")
-        max_page = max([int(atag["href"].split('start=')[1]) for atag in atags])
-        page += 10
-        if page_lmit and (page > page_lmit):
-            break
-
-        # sleep
-        time.sleep(sleep + random.random() + 0.5)
-
         # save the results
+        print('saving:', len(titles), 'results')
         result = {
             'link': links,
             'title': titles,
@@ -87,6 +87,21 @@ def crawler(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_p
         df = pd.DataFrame(result)
         df = df.sort_values(by=['date'])
         df.to_excel(save_path + query + '.xlsx')
+
+        # get paging info
+        paging = bsobj.find("div", {"class": "paging"})
+        if not paging:
+            print('(WARNING!) no results found')
+            break
+
+        atags = paging.find_all('a')
+        if not atags:
+            print('(WARNING!) there is only one page')
+            break
+
+        # update page info
+        max_page = max([int(atag["href"].split('start=')[1]) for atag in atags])
+        page += 10
 
 
 def get_news(url):
@@ -150,14 +165,14 @@ if __name__ == '__main__':
     if not os.path.exists(path):
         os.mkdir(path)
 
-    crawler(query,
-            begin,
-            end,
-            sleep=sleep,
-            page_lmit=limit,
-            sort=sort,
-            field=field,
-            save_path=path)
+    crawl(query,
+          begin,
+          end,
+          sleep=sleep,
+          page_lmit=limit,
+          sort=sort,
+          field=field,
+          save_path=path)
 
-    # crawler("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
-    # crawler("아이유", "2020.01.01", "2020.06.22")    : 크롤링 안됨 (연예)
+    # crawl("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
+    # crawl("아이유", "2020.01.01", "2020.06.22")    : 크롤링 안됨 (연예)
