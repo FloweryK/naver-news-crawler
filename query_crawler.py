@@ -1,3 +1,9 @@
+'''
+By Minsang Yu. flowerk94@gmail.com.
+https://github.com/FloweryK/naver_news_crawler
+'''
+
+
 from urllib.request import urlopen
 from urllib import parse
 from bs4 import BeautifulSoup
@@ -153,5 +159,5 @@ if __name__ == '__main__':
             field=field,
             save_path=path)
 
-    # crawler("아이유", "2020.01.01", "2020.06.22")
     # crawler("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
+    # crawler("아이유", "2020.01.01", "2020.06.22")    : 크롤링 안됨 (연예)
