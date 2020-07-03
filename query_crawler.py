@@ -1,50 +1,37 @@
 '''
 By Minsang Yu. flowerk94@gmail.com.
-https://github.com/FloweryK/naver_news_crawler
 '''
 
-
-from urllib.request import urlopen
+from ssl import SSLError
 from urllib import parse
+from urllib.error import URLError
+from urllib.request import urlopen
 from bs4 import BeautifulSoup
-import os
-import re
 import time
+import socket
 import random
 import datetime
-import argparse
 import pandas as pd
 
+# Settings
+SLEEP = 1           # secs
+TIMEOUT = 30        # secs
+TIMEOUT_LIMIT = 5   # counts
+PAGE_LIMIT = 50     # pages
 
-def crawl(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_path='results/'):
-    '''
-    :param query:
-    :param begin:
-    :param end:
-    :param sleep:
-    :param page_lmit:
-    :param sort: 0 (관련도순), 1 (최신순), 2 (오래된순)
-    :param field: 0 (전체), 1 (제목)
-    :return:
-    '''
 
-    # make empty lists for saving results
+def crawl(query, begin, end, save_as, sort, field):
+    # sort: 0 (관련도순), 1 (최신순), 2 (오래된순)
+    # field: 0 (전체), 1 (제목)
+
     links = []
     titles = []
     dates = []
     articles = []
 
-    # initial page and max page
     page = 1
     max_page = 2
-
     while page <= max_page:
-        if page_lmit and (page > page_lmit):
-            print('page limit exceeded: page(%i) > page_limit(%i)' % (page, page_lmit))
-            break
-
-        # sleep
-        time.sleep(sleep + random.random() + 0.5)
         print('\n' + 'crawling... %s (page %i/%i)' % (query, 1+page//10, 1+max_page//10))
 
         # make url
@@ -57,27 +44,61 @@ def crawl(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_pat
         url += "&start=" + str(page)
         url += "&refresh_start=0"
 
-        # make bs object
-        print('opening url:', url)
-        html = urlopen(url)
-        bsobj = BeautifulSoup(html, "html.parser")
+        # sleep before starting
+        time.sleep(SLEEP + random.random())
 
-        # get urls which is included as '네이버뉴스'
+        # open url
+        try:
+            print('opening url:', url)
+            html = urlopen(url, timeout=TIMEOUT)
+
+        except (URLError, SSLError) as e:
+            print('(Error!) URLError or SSLError', e)
+            print('reloading...')
+            time.sleep(TIMEOUT)
+            continue
+
+        # make bsobj
+        try:
+            print('parsing html')
+            bsobj = BeautifulSoup(html, "html.parser")
+
+        except socket.timeout as e:
+            print('(Error!) socket.timeout', e)
+            print('reloading...')
+            time.sleep(TIMEOUT)
+            continue
+
+        # open urls inside, which are included as '네이버뉴스'
         for obj in bsobj.select("._sp_each_url"):
             url = obj['href']
-            try:
-                if 'https://news.naver.com' in url:
-                    title, date, article = get_news(url)
 
+            if url in links:
+                print('\turl already crawled:', url)
+                continue
+
+            if 'https://news.naver.com' in url:
+                time.sleep(0.3 + random.random())
+
+                print('\topening inside', url)
+                try:
+                    # get news info
+                    title, date, article = get_naver_news(url, TIMEOUT, TIMEOUT_LIMIT)
+
+                    # add results
                     links.append(url)
                     titles.append(title)
                     dates.append(date)
                     articles.append(article)
-            except Exception as e:
-                print('crawling failed at:', url, '(maybe the page is redirected to entertainment section)')
+
+                except TimeoutError as e:
+                    print('\t(Error!) TimeoutError, Exceeded timeout limit', e)
+
+                except IndexError:
+                    print('\t(Error!) crawling failed (maybe url is redirected to somewhere else)')
 
         # save the results
-        print('saving:', len(titles), 'results')
+        print(len(titles), 'are saved as naver news')
         result = {
             'link': links,
             'title': titles,
@@ -86,7 +107,7 @@ def crawl(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_pat
         }
         df = pd.DataFrame(result)
         df = df.sort_values(by=['date'])
-        df.to_excel(save_path + query + '.xlsx')
+        df.to_excel(save_as, engine='xlsxwriter')
 
         # get paging info
         paging = bsobj.find("div", {"class": "paging"})
@@ -103,31 +124,42 @@ def crawl(query, begin, end, sleep=0.5, page_lmit=300, sort=0, field=1, save_pat
         max_page = max([int(atag["href"].split('start=')[1]) for atag in atags])
         page += 10
 
+        # check if page is over page limit
+        if PAGE_LIMIT and (page > 1 + 10 * PAGE_LIMIT):
+            print('page limit exceeded: page(%i) > page_limit(%i)' % (page, PAGE_LIMIT))
+            break
 
-def get_news(url):
+
+def get_naver_news(url, timeout=30, timeout_limit=5):
     def _get_title(bsobj):
         return bsobj.select('h3#articleTitle')[0].text
 
     def _get_date(bsobj):
         splits = bsobj.select('.t11')[0].text.split(' ')
-
         date = splits[0] + ' ' + splits[2]
         date = datetime.datetime.strptime(date, '%Y.%m.%d. %H:%M')
         date += datetime.timedelta(hours=12 * int(splits[1] == '오후'))
         return date
 
     def _get_article(bsobj):
-        article = bsobj.select('#articleBodyContents')[0].text
+        return bsobj.select('#articleBodyContents')[0].text
 
-        # basic pre-processing
-        article = re.sub('[\n]|[\xa0]', ' ', article)
-        article = re.sub('[\[\]]', ' ', article)
-        article = re.sub('\s{2,}', '', article)
-        return article
+    # open url
+    count = 0
+    while True:
+        try:
+            html = urlopen(url, timeout=timeout)
+            bsobj = BeautifulSoup(html, 'html.parser')
+            break
 
-    # make bs object
-    html = urlopen(url)
-    bsobj = BeautifulSoup(html, 'html.parser')
+        except (URLError, SSLError, socket.timeout) as e:
+            print('\t(Error!) Timeout (%i sec), trying again... (count=%i) %s' % (timeout, count, e))
+            count += 1
+            timeout += timeout
+            time.sleep(timeout)
+
+            if count > timeout_limit:
+                raise TimeoutError
 
     # extract wanted elements
     title = _get_title(bsobj)
@@ -138,41 +170,8 @@ def get_news(url):
 
 
 if __name__ == '__main__':
-    # Today
-    today = datetime.datetime.now().strftime('%Y.%m.%d')
-
-    # Argument configuration
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
-    parser.add_argument('--begin', type=str, default='2020.01.01', help='crawling begin point')
-    parser.add_argument('--end', type=str, default=today, help='crawling end point')
-    parser.add_argument('--path', type=str, default='results/', help='saving path for crawling results')
-    parser.add_argument('--limit', type=int, default=0, help='crawling page limit on single query, 0 for no limit')
-    parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
-    parser.add_argument('--field', type=int, default=1, help='search field: 0(all), 1(title)')
-    parser.add_argument('--sleep', type=float, default=1., help='sleep interval between requests')
-    args = parser.parse_args()
-
-    query = args.query
-    begin = args.begin
-    end = args.end
-    path = args.path
-    limit = args.limit
-    sort = args.sort
-    field = args.field
-    sleep = args.sleep
-
-    if not os.path.exists(path):
-        os.mkdir(path)
-
-    crawl(query,
-          begin,
-          end,
-          sleep=sleep,
-          page_lmit=limit,
-          sort=sort,
-          field=field,
-          save_path=path)
-
-    # crawl("두산중공업", "2020.01.04", "2020.03.12", sleep=1, sort=1)
-    # crawl("아이유", "2020.01.01", "2020.06.22")    : 크롤링 안됨 (연예)
+    # crawl("트러스제7호", "2019.03.01", "2019.03.31", save_as='test.xlsx')
+    # crawl("영현무역", "2016.03.01", "2016.03.31", save_as='test.xlsx')    # no result test
+    # crawl("영현무역", "2016.04.01", "2016.04.30", save_as='test.xlsx')    # one page test
+    crawl("두산중공업", "2016.03.01", "2016.03.30", save_as='test.xlsx', sort=0, field=1)   # run test
+    # crawl("아이유", "2020.01.01", "2020.06.22", save_as='test.xlsx', sort=0, field=1)   #  크롤링 안됨 (연예)
