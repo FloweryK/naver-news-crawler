@@ -182,8 +182,8 @@ if __name__ == '__main__':
     # Argument configuration
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
-    parser.add_argument('--begin', type=str, required=True, help='crawling begin point (%Y.%m.%d format)')
-    parser.add_argument('--end', type=str, required=True, help='crawling end point (%Y.%m.%d format)')
+    parser.add_argument('--begin', type=str, required=True, help='crawling begin point (%%Y.%%m.%%d format)')
+    parser.add_argument('--end', type=str, required=True, help='crawling end point (%%Y.%%m.%%d format)')
     parser.add_argument('--savedir', type=str, default='result', help='save directory')
     parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
     parser.add_argument('--field', type=int, default=1, help='search field: 0(all), 1(title)')
