@@ -54,20 +54,17 @@ $ source venv/bin/activate
 
 #### (1) 기본적인 사용법
 
-예를 들어 '카카오'라는 검색어로 뉴스를 검색한다고 한다면, `--query` 인자로 넘겨 다음과 같이 실행하면 됩니다.
+예를 들어 '네이버'라는 검색어로 뉴스를 검색한다고 한다면, `--query` 인자로 넘겨 다음과 같이 실행하면 됩니다.
 
 ```bash
-$ python query_crawler.py --query 카카오
+$ python query_crawler.py --query 네이버 --begin 2020.01.01 --end 2020.03.01
 
-crawling... 카카오 (page 1/1)
-opening url: https://search.naver.com/search.naver?&where=news&query=%EC%B9%B4%EC%B9%B4%EC%98%A4&sort=0&field=1&ds=2020.01.01&de=2020.06.23&nso=so:r,p:from20200101to20200623&start=1&refresh_start=0
-
-crawling... 카카오 (page 2/10)
-opening url: https://search.naver.com/search.naver?&where=news&query=%EC%B9%B4%EC%B9%B4%EC%98%A4&sort=0&field=1&ds=2020.01.01&de=2020.06.23&nso=so:r,p:from20200101to20200623&start=11&refresh_start=0
-
-crawling... 카카오 (page 3/10)
-opening url: https://search.naver.com/search.naver?&where=news&query=%EC%B9%B4%EC%B9%B4%EC%98%A4&sort=0&field=1&ds=2020.01.01&de=2020.06.23&nso=so:r,p:from20200101to20200623&start=21&refresh_start=0
-
+crawling... 네이버 (page 1/1)
+opening url: https://search.naver.com/search.naver?&where=news&query=%EB%84%A4%EC%9D%B4%EB%B2%84&sort=0&field=1&ds=2020.01.01&de=2020.03.01&
+nso=so:r,p:from20200101to20200301&start=1&refresh_start=0
+parsing html
+        opening inside https://news.naver.com/main/read.nhn?mode=LSD&mid=sec&sid1=105&oid=092&aid=0002182034
+        opening inside https://news.naver.com/main/read.nhn?mode=LSD&mid=sec&sid1=105&oid=015&aid=0004298040
 ...
 ```
 
@@ -77,16 +74,14 @@ opening url: https://search.naver.com/search.naver?&where=news&query=%EC%B9%B4%E
 
 
 
-| Argument  | type  | help                                              | default                     |
-| --------- | ----- | ------------------------------------------------- | --------------------------- |
-| `--query` | str   | 검색어                                            | Required                    |
-| `--begin` | str   | 검색 기간 시작                                    | `2020.01.01`                |
-| `--end`   | str   | 검색 기간 끝                                      | 오늘 날짜의 `%Y.%m.%d` 형식 |
-| `--path`  | str   | 결과 저장 경로                                    | `results/`                  |
-| `--limit` | int   | 페이지 한계                                       | `300`                       |
-| `--sort`  | int   | 검색 옵션: `0`=관련도순, `1`=최신순, `2`=오래된순 | `0` (관련도순)              |
-| `--field` | int   | 검색 옵션: `0`=전체, `1`=제목                     | `1` (제목)                  |
-| `--sleep` | float | anti-crawling을 막기 위한 sleep time (sec)        | `1.` (sec)                  |
+| Argument    | type | help                                              | default               |
+| ----------- | ---- | ------------------------------------------------- | --------------------- |
+| `--query`   | str  | 검색어                                            | Required              |
+| `--begin`   | str  | 검색 기간 시작                                    | Required (`%Y.%m.%d`) |
+| `--end`     | str  | 검색 기간 끝                                      | Required (`%Y.%m.%d`) |
+| `--savedir` | str  | 결과 저장 경로                                    | `results`             |
+| `--sort`    | int  | 검색 옵션: `0`=관련도순, `1`=최신순, `2`=오래된순 | `0` (관련도순)        |
+| `--field`   | int  | 검색 옵션: `0`=전체, `1`=제목                     | `1` (제목)            |
 
 
 
@@ -95,18 +90,15 @@ opening url: https://search.naver.com/search.naver?&where=news&query=%EC%B9%B4%E
 ```bash
 $ python query_crawler.py -h
 usage: query_crawler.py [-h] --query QUERY --begin BEGIN --end END
-                        [--path PATH] [--limit LIMIT] [--sort SORT]
-                        [--field FIELD] [--sleep SLEEP]
+                        [--savedir SAVEDIR] [--sort SORT] [--field FIELD]
 
 optional arguments:
-  -h, --help     show this help message and exit
-  --query QUERY  query to search on NAVER
-  --begin BEGIN  crawling begin point
-  --end END      crawling end point
-  --path PATH    saving path for crawling results
-  --limit LIMIT  crawling page limit on single query, 0 for no limit
-  --sort SORT    search result sorting: 0(relevant), 1(newest), 2(oldest)
-  --field FIELD  search field: 0(all), 1(title)
-  --sleep SLEEP  sleep interval between requests
+  -h, --help         show this help message and exit
+  --query QUERY      query to search on NAVER
+  --begin BEGIN      crawling begin point (%Y.%m.%d format)
+  --end END          crawling end point (%Y.%m.%d format)
+  --savedir SAVEDIR  save directory
+  --sort SORT        search result sorting: 0(relevant), 1(newest), 2(oldest)
+  --field FIELD      search field: 0(all), 1(title)
 ```
 
