@@ -7,11 +7,14 @@ from urllib import parse
 from urllib.error import URLError
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+import os
 import time
 import socket
 import random
 import datetime
+import argparse
 import pandas as pd
+
 
 # Settings
 SLEEP = 1           # secs
@@ -20,7 +23,7 @@ TIMEOUT_LIMIT = 5   # counts
 PAGE_LIMIT = 50     # pages
 
 
-def crawl(query, begin, end, save_as, sort, field):
+def crawl(query, begin, end, savedir, sort, field):
     # sort: 0 (관련도순), 1 (최신순), 2 (오래된순)
     # field: 0 (전체), 1 (제목)
 
@@ -107,7 +110,7 @@ def crawl(query, begin, end, save_as, sort, field):
         }
         df = pd.DataFrame(result)
         df = df.sort_values(by=['date'])
-        df.to_excel(save_as, engine='xlsxwriter')
+        df.to_excel(savedir + '/' + query + '.xlsx', engine='xlsxwriter')
 
         # get paging info
         paging = bsobj.find("div", {"class": "paging"})
@@ -170,8 +173,35 @@ def get_naver_news(url, timeout=30, timeout_limit=5):
 
 
 if __name__ == '__main__':
+    # crawl("두산중공업", "2016.03.01", "2016.03.30", save_as='test.xlsx', sort=0, field=1)   # run test
     # crawl("트러스제7호", "2019.03.01", "2019.03.31", save_as='test.xlsx')
     # crawl("영현무역", "2016.03.01", "2016.03.31", save_as='test.xlsx')    # no result test
     # crawl("영현무역", "2016.04.01", "2016.04.30", save_as='test.xlsx')    # one page test
-    crawl("두산중공업", "2016.03.01", "2016.03.30", save_as='test.xlsx', sort=0, field=1)   # run test
     # crawl("아이유", "2020.01.01", "2020.06.22", save_as='test.xlsx', sort=0, field=1)   #  크롤링 안됨 (연예)
+
+    # Argument configuration
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
+    parser.add_argument('--begin', type=str, required=True, help='crawling begin point (%Y.%m.%d format)')
+    parser.add_argument('--end', type=str, required=True, help='crawling end point (%Y.%m.%d format)')
+    parser.add_argument('--savedir', type=str, default='result', help='save directory')
+    parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
+    parser.add_argument('--field', type=int, default=1, help='search field: 0(all), 1(title)')
+    args = parser.parse_args()
+
+    query = args.query
+    begin = args.begin
+    end = args.end
+    savedir = args.savedir
+    sort = args.sort
+    field = args.field
+
+    # make savedir
+    os.makedirs(savedir, exist_ok=True)
+
+    # crawl
+    crawl(query, begin, end, savedir, sort, field)
+
+
+
+
