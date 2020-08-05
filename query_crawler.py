@@ -63,9 +63,9 @@ def crawl(query, begin, end, save_as, sort=0, field=1, delay=0.5, timeout=30, pa
             continue
 
         # open urls inside, which are included as '네이버뉴스'
-        for obj in bsobj.select("._sp_each_url"):
-            url = obj['href']
+        naver_news_urls = [link['href'] for link in bsobj.find_all('a', href=True) if 'https://news.naver.com/main/read' in link['href']]
 
+        for url in naver_news_urls:
             if url in links:
                 print('\turl already crawled:', url)
                 continue
@@ -76,6 +76,7 @@ def crawl(query, begin, end, save_as, sort=0, field=1, delay=0.5, timeout=30, pa
                     # get news info
                     time.sleep(delay + random.random())
                     title, date, article = get_naver_news(url)
+                    print('\t', title)
 
                     # add results
                     links.append(url)
@@ -173,7 +174,21 @@ def get_arguments():
     return parser.parse_args()
 
 
+def test():
+    query = 'LG화학'
+    begin = '2019.08.02'
+    end = '2019.08.02'
+    save_as = 'test.xlsx'
+    sort = 0
+    field = 1
+    crawl(query, begin, end, save_as, sort, field)
+
+
 if __name__ == '__main__':
+    test()
+    exit()
+
+
     args = get_arguments()
     query = args.query
     begin = args.begin
