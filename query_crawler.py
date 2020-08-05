@@ -7,23 +7,15 @@ from urllib import parse
 from urllib.error import URLError
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-import os
 import time
 import socket
 import random
-import datetime
 import argparse
+import datetime
 import pandas as pd
 
 
-# Settings
-SLEEP = 1           # secs
-TIMEOUT = 30        # secs
-TIMEOUT_LIMIT = 5   # counts
-PAGE_LIMIT = 50     # pages
-
-
-def crawl(query, begin, end, savedir, sort, field):
+def crawl(query, begin, end, save_as, sort=0, field=1, delay=0.5, timeout=30, page_limit=10):
     # sort: 0 (관련도순), 1 (최신순), 2 (오래된순)
     # field: 0 (전체), 1 (제목)
 
@@ -47,18 +39,16 @@ def crawl(query, begin, end, savedir, sort, field):
         url += "&start=" + str(page)
         url += "&refresh_start=0"
 
-        # sleep before starting
-        time.sleep(SLEEP + random.random())
-
         # open url
         try:
             print('opening url:', url)
-            html = urlopen(url, timeout=TIMEOUT)
+            time.sleep(delay + random.random())
+            html = urlopen(url, timeout=timeout)
 
-        except (URLError, SSLError) as e:
-            print('(Error!) URLError or SSLError', e)
+        except (URLError, SSLError, socket.timeout) as e:
+            print('(Error!)', e)
             print('reloading...')
-            time.sleep(TIMEOUT)
+            time.sleep(timeout)
             continue
 
         # make bsobj
@@ -69,7 +59,7 @@ def crawl(query, begin, end, savedir, sort, field):
         except socket.timeout as e:
             print('(Error!) socket.timeout', e)
             print('reloading...')
-            time.sleep(TIMEOUT)
+            time.sleep(timeout)
             continue
 
         # open urls inside, which are included as '네이버뉴스'
@@ -81,12 +71,11 @@ def crawl(query, begin, end, savedir, sort, field):
                 continue
 
             if 'https://news.naver.com' in url:
-                time.sleep(0.3 + random.random())
-
                 print('\topening inside', url)
                 try:
                     # get news info
-                    title, date, article = get_naver_news(url, TIMEOUT, TIMEOUT_LIMIT)
+                    time.sleep(delay + random.random())
+                    title, date, article = get_naver_news(url)
 
                     # add results
                     links.append(url)
@@ -110,7 +99,7 @@ def crawl(query, begin, end, savedir, sort, field):
         }
         df = pd.DataFrame(result)
         df = df.sort_values(by=['date'])
-        df.to_excel(savedir + '/' + query + '.xlsx', engine='xlsxwriter')
+        df.to_excel(save_as, engine='xlsxwriter')
 
         # get paging info
         paging = bsobj.find("div", {"class": "paging"})
@@ -128,8 +117,8 @@ def crawl(query, begin, end, savedir, sort, field):
         page += 10
 
         # check if page is over page limit
-        if PAGE_LIMIT and (page > 1 + 10 * PAGE_LIMIT):
-            print('page limit exceeded: page(%i) > page_limit(%i)' % (page, PAGE_LIMIT))
+        if page_limit and (page > 1 + 10 * page_limit):
+            print('page limit exceeded: page(%i) > page_limit(%i)' % (page, page_limit))
             break
 
 
@@ -147,7 +136,7 @@ def get_naver_news(url, timeout=30, timeout_limit=5):
     def _get_article(bsobj):
         return bsobj.select('#articleBodyContents')[0].text
 
-    # open url
+    # open url and get html
     count = 0
     while True:
         try:
@@ -172,35 +161,29 @@ def get_naver_news(url, timeout=30, timeout_limit=5):
     return title, date, article
 
 
-if __name__ == '__main__':
-    # crawl("두산중공업", "2016.03.01", "2016.03.30", save_as='test.xlsx', sort=0, field=1)   # run test
-    # crawl("트러스제7호", "2019.03.01", "2019.03.31", save_as='test.xlsx')
-    # crawl("영현무역", "2016.03.01", "2016.03.31", save_as='test.xlsx')    # no result test
-    # crawl("영현무역", "2016.04.01", "2016.04.30", save_as='test.xlsx')    # one page test
-    # crawl("아이유", "2020.01.01", "2020.06.22", save_as='test.xlsx', sort=0, field=1)   #  크롤링 안됨 (연예)
-
+def get_arguments():
     # Argument configuration
     parser = argparse.ArgumentParser()
     parser.add_argument('--query', type=str, required=True, help='query to search on NAVER')
     parser.add_argument('--begin', type=str, required=True, help='crawling begin point (%%Y.%%m.%%d format)')
     parser.add_argument('--end', type=str, required=True, help='crawling end point (%%Y.%%m.%%d format)')
-    parser.add_argument('--savedir', type=str, default='result', help='save directory')
+    parser.add_argument('--save_as', type=str, default='test.xlsx', help='excel save path')
     parser.add_argument('--sort', type=int, default=0, help='search result sorting: 0(relevant), 1(newest), 2(oldest)')
     parser.add_argument('--field', type=int, default=1, help='search field: 0(all), 1(title)')
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+if __name__ == '__main__':
+    args = get_arguments()
     query = args.query
     begin = args.begin
     end = args.end
-    savedir = args.savedir
+    save_as = args.save_as
     sort = args.sort
     field = args.field
 
-    # make savedir
-    os.makedirs(savedir, exist_ok=True)
-
     # crawl
-    crawl(query, begin, end, savedir, sort, field)
+    crawl(query, begin, end, save_as, sort, field)
 
 
 
