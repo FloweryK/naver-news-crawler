@@ -57,14 +57,21 @@ $ source venv/bin/activate
 예를 들어 '네이버'라는 검색어로 뉴스를 검색한다고 한다면, `--query` 인자로 넘겨 다음과 같이 실행하면 됩니다.
 
 ```bash
-$ python query_crawler.py --query 네이버 --begin 2020.01.01 --end 2020.03.01
+$ python query_crawler.py --query 네이버 --begin 2020.08.04 --end 2020.08.05 --save_as '네이버.xlsx' --sort 0 --field 1
 
 crawling... 네이버 (page 1/1)
-opening url: https://search.naver.com/search.naver?&where=news&query=%EB%84%A4%EC%9D%B4%EB%B2%84&sort=0&field=1&ds=2020.01.01&de=2020.03.01&
-nso=so:r,p:from20200101to20200301&start=1&refresh_start=0
+opening url: https://search.naver.com/search.naver?&where=news&query=%EB%84%A4%EC%9D%B4%EB%B2%84&sort=0&field=1&ds=2020.08.04&de=2020.08.05&nso=so:r,p:from20200804to20200805&start=1&refresh_start=0
 parsing html
-        opening inside https://news.naver.com/main/read.nhn?mode=LSD&mid=sec&sid1=105&oid=092&aid=0002182034
-        opening inside https://news.naver.com/main/read.nhn?mode=LSD&mid=sec&sid1=105&oid=015&aid=0004298040
+        opening inside https://news.naver.com/main/read.nhnmode=LSD&mid=sec&sid1=101&oid=030&aid=0002896640
+         신한카드, 네이버페이 라인프렌즈 카드 이벤트 실시
+        opening inside https://news.naver.com/main/read.nhnmode=LSD&mid=sec&sid1=101&oid=014&aid=0004472297
+         신한카드, 네이버페이 라인프렌지 카드 이용 고객 대상 이벤트 실시
+        opening inside https://news.naver.com/main/read.nhnmode=LSD&mid=sec&sid1=101&oid=241&aid=0003043774
+         라인프렌즈 신한카드, 네이버페이 혜택 빵빵한 이벤트
+        opening inside https://news.naver.com/main/read.nhnmode=LSD&mid=sec&sid1=105&oid=028&aid=0002507565
+         라인·야후 경영통합 승인…내년 2월 네이버에서 라인 분할
+        opening inside https://news.naver.com/main/read.nhnmode=LSD&mid=sec&sid1=105&oid=014&aid=0004472083
+         네이버 “라인과 야후재팬 경영통합 승인 완료”
 ...
 ```
 
@@ -79,7 +86,7 @@ parsing html
 | `--query`   | str  | 검색어                                            | Required              |
 | `--begin`   | str  | 검색 기간 시작                                    | Required (`%Y.%m.%d`) |
 | `--end`     | str  | 검색 기간 끝                                      | Required (`%Y.%m.%d`) |
-| `--savedir` | str  | 결과 저장 경로                                    | `results`             |
+| `--save_as` | str  | 결과 저장 경로 (`.xlsx` 형식이어야 함)            | `results`             |
 | `--sort`    | int  | 검색 옵션: `0`=관련도순, `1`=최신순, `2`=오래된순 | `0` (관련도순)        |
 | `--field`   | int  | 검색 옵션: `0`=전체, `1`=제목                     | `1` (제목)            |
 
@@ -88,16 +95,16 @@ parsing html
 ## Arguments
 
 ```bash
-$ python query_crawler.py -h
+$ python query_crawler.py --h
 usage: query_crawler.py [-h] --query QUERY --begin BEGIN --end END
-                        [--savedir SAVEDIR] [--sort SORT] [--field FIELD]
+                        [--save_as SAVE_AS] [--sort SORT] [--field FIELD]
 
 optional arguments:
   -h, --help         show this help message and exit
   --query QUERY      query to search on NAVER
   --begin BEGIN      crawling begin point (%Y.%m.%d format)
   --end END          crawling end point (%Y.%m.%d format)
-  --savedir SAVEDIR  save directory
+  --save_as SAVE_AS  excel save path
   --sort SORT        search result sorting: 0(relevant), 1(newest), 2(oldest)
   --field FIELD      search field: 0(all), 1(title)
 ```
