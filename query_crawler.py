@@ -174,21 +174,7 @@ def get_arguments():
     return parser.parse_args()
 
 
-def test():
-    query = 'LG화학'
-    begin = '2019.08.02'
-    end = '2019.08.02'
-    save_as = 'test.xlsx'
-    sort = 0
-    field = 1
-    crawl(query, begin, end, save_as, sort, field)
-
-
 if __name__ == '__main__':
-    test()
-    exit()
-
-
     args = get_arguments()
     query = args.query
     begin = args.begin
