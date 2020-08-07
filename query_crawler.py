@@ -153,6 +153,9 @@ def get_naver_news(url, timeout=30, timeout_limit=5):
 
             if count > timeout_limit:
                 raise TimeoutError
+        except socket.error as e:
+            print('\t(Error!) waiting 10 min.', e)
+            time.sleep(10*60)
 
     # extract wanted elements
     title = _get_title(bsobj)
