@@ -33,12 +33,15 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
 
     # prerequisite
     df = pd.DataFrame(columns=['link', 'title', 'date', 'article'])
-    page = 1
-    max_page = 2
 
-    while (page <= max_page) and (page <= 1 + 10 * page_limit):
-        print('\n' + 'crawling... %s (page %i/%i)' % (query, 1+page//10, 1+max_page//10))
-        url = make_url(query, sort, field, begin, end, page)
+    # index settings
+    # a single pages includes 10 news, starting from page 1 (index 1~10)
+    current_index = 1
+    max_index = 2
+
+    while (current_index <= max_index) and (current_index <= 1 + 10 * page_limit):
+        print('\n' + 'crawling... %s (current_index %i/%i)' % (query, 1 + current_index // 10, 1 + max_index // 10))
+        url = make_url(query, sort, field, begin, end, current_index)
         print('making url', url)
 
         print('making beautifulsoup object from html')
@@ -67,12 +70,12 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
         df = df.sort_values(by=['date'])
         df.to_excel(save_as, engine='xlsxwriter')
 
-        print('updating page info')
-        page += 10
-        max_page = get_max_page(bsobj)
-        if max_page is None:
+        print('updating current_news_index info')
+        current_index += 10
+        max_index = get_max_index(bsobj)
+        if max_index is None:
             break
-        print('next page:', page//10 + 1)
+        print('next current_news_index:', current_index // 10 + 1)
 
 
 def make_url(query, sort, field, begin, end, page):
@@ -135,7 +138,7 @@ def get_attributes(bsobj):
         return None
 
 
-def get_max_page(bsobj):
+def get_max_index(bsobj):
     paging = bsobj.find("div", {"class": "paging"})
     if not paging:
         print('(WARNING!) no results found')
@@ -147,8 +150,6 @@ def get_max_page(bsobj):
         return None
 
     return max([int(atag["href"].split('start=')[1]) for atag in atags])
-
-
 
 
 def get_arguments():
@@ -172,6 +173,8 @@ def test():
 
 
 if __name__ == '__main__':
+    test()
+    exit()
     args = get_arguments()
     query = args.query
     begin = args.begin
