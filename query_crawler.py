@@ -169,14 +169,18 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
-    exit()
     args = get_arguments()
+
     query = args.query
+    save_as = args.save_as
     begin = args.begin
     end = args.end
-    save_as = args.save_as
     sort = args.sort
     field = args.field
 
-    crawl(query, save_as, begin, end, sort, field)
+    crawl(query=query,
+          save_as=save_as,
+          begin=begin,
+          end=end,
+          sort=sort,
+          field=field)
