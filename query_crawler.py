@@ -1,7 +1,3 @@
-'''
-By Minsang Yu. flowerk94@gmail.com.
-'''
-
 from ssl import SSLError
 from urllib import parse
 from urllib.error import URLError
