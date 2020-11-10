@@ -30,8 +30,7 @@ def crawl_query_by_unit(query, begin, end, save_dir, mode, days=None):
         if os.path.exists(save_as):
             print('\talready crawled. go to next step')
         else:
-            # crawl(query, partial_begin_str, partial_end_str, save_as)
-            pass
+            crawl(query, partial_begin_str, partial_end_str, save_as)
 
         partial_end = update_partial_end(partial_end, mode, days)
 
