@@ -16,76 +16,7 @@ import datetime
 import pandas as pd
 
 
-def make_url(query, sort, field, begin, end, page):
-    url = "https://search.naver.com/search.naver?&where=news&query=" + parse.quote(query)
-    url += "&sort=%i" % sort
-    url += "&field=%i" % field
-    url += "&ds=" + begin + "&de=" + end
-    url += "&nso=so:r,p:"
-    url += "from" + begin.replace(".", "") + "to" + end.replace(".", "")
-    url += "&start=" + str(page)
-    url += "&refresh_start=0"
-    return url
-
-
-def make_bsobj(url, delay=0.5, timeout=30, trial=10):
-    ua = UserAgent()
-    count = 0
-
-    while count > trial:
-        try:
-            time.sleep(delay + random.random())
-            html = urlopen(Request(url=url, headers={'User-Agent': ua.random}), timeout=timeout)
-            bsobj = BeautifulSoup(html, 'html.parser')
-            return bsobj
-        except (URLError, SSLError, socket.timeout) as e:
-            print('(Error)', e)
-            print('reloading...')
-            count += 1
-            time.sleep(timeout)
-    return None
-
-
-def make_naver_news_urls(bsobj):
-    return [link['href'] for link in bsobj.find_all('a', href=True) if 'https://news.naver.com/main/read' in link['href']]
-
-
-def get_attributes(bsobj):
-    def _get_title(bsobj):
-        return bsobj.select('h3#articleTitle')[0].text
-
-    def _get_article(bsobj):
-        return bsobj.select('#articleBodyContents')[0].text
-
-    def _get_date(bsobj):
-        splits = bsobj.select('.t11')[0].text.split(' ')
-        date = splits[0] + ' ' + splits[2]
-        date = datetime.datetime.strptime(date, '%Y.%m.%d. %H:%M')
-        date += datetime.timedelta(hours=12 * int(splits[1] == '오후'))
-        return date
-
-    try:
-        return _get_date(bsobj), _get_article(bsobj), _get_title(bsobj)
-    except IndexError:
-        print('(Error) crawling failed (maybe url is redirected to somewhere else)')
-        return None
-
-
-def get_max_page(bsobj):
-    paging = bsobj.find("div", {"class": "paging"})
-    if not paging:
-        print('(WARNING!) no results found')
-        return None
-
-    atags = paging.find_all('a')
-    if not atags:
-        print('(WARNING!) there is only one page')
-        return None
-
-    return max([int(atag["href"].split('start=')[1]) for atag in atags])
-
-
-def run(query, begin, end, save_as, sort=0, field=1, delay=0.5, timeout=30, page_limit=9999):
+def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, page_limit=50):
     # sort: 0 (관련도순), 1 (최신순), 2 (오래된순) | field: 0 (전체), 1 (제목)
 
     # prerequisite
@@ -132,6 +63,82 @@ def run(query, begin, end, save_as, sort=0, field=1, delay=0.5, timeout=30, page
         print('next page:', page//10 + 1)
 
 
+def make_url(query, sort, field, begin, end, page):
+    url = "https://search.naver.com/search.naver?&where=news&query=" + parse.quote(query)
+    url += "&sort=%i" % sort
+    url += "&field=%i" % field
+    url += "&ds=" + begin + "&de=" + end
+    url += "&nso=so:r,p:"
+    url += "from" + begin.replace(".", "") + "to" + end.replace(".", "")
+    url += "&start=" + str(page)
+    url += "&refresh_start=0"
+    return url
+
+
+def make_bsobj(url, delay=0.5, timeout=30, trial=10):
+    ua = UserAgent(verify_ssl=False)
+    count = 0
+
+    while count < trial:
+        try:
+            time.sleep(delay + random.random())
+            html = urlopen(Request(url=url, headers={'User-Agent': ua.random}), timeout=timeout)
+            bsobj = BeautifulSoup(html, 'html.parser')
+            return bsobj
+        except (URLError, SSLError, socket.timeout) as e:
+            print('(Error)', e)
+            print('reloading...')
+            count += 1
+            time.sleep(timeout)
+    return None
+
+
+def make_naver_news_urls(bsobj):
+    return [link['href'] for link in bsobj.find_all('a', href=True)
+            if 'https://news.naver.com/main/read' in link['href']]
+
+
+def get_attributes(bsobj):
+    def _get_title(bsobj):
+        title = bsobj.select('h3#articleTitle')[0].text
+        title = title.encode('utf-8', 'replace').decode()
+        return title
+
+    def _get_article(bsobj):
+        article = bsobj.select('#articleBodyContents')[0].text
+        article = article.encode('utf-8', 'replace').decode()
+        return article
+
+    def _get_date(bsobj):
+        splits = bsobj.select('.t11')[0].text.split(' ')
+        date = splits[0] + ' ' + splits[2]
+        date = datetime.datetime.strptime(date, '%Y.%m.%d. %H:%M')
+        date += datetime.timedelta(hours=12 * int(splits[1] == '오후'))
+        return date
+
+    try:
+        return _get_date(bsobj), _get_article(bsobj), _get_title(bsobj)
+    except IndexError:
+        print('(Error) crawling failed (maybe url is redirected to somewhere else)')
+        return None
+
+
+def get_max_page(bsobj):
+    paging = bsobj.find("div", {"class": "paging"})
+    if not paging:
+        print('(WARNING!) no results found')
+        return None
+
+    atags = paging.find_all('a')
+    if not atags:
+        print('(WARNING!) there is only one page')
+        return None
+
+    return max([int(atag["href"].split('start=')[1]) for atag in atags])
+
+
+
+
 def get_arguments():
     # Argument configuration
     parser = argparse.ArgumentParser()
@@ -145,11 +152,11 @@ def get_arguments():
 
 
 def test():
-    query = '애플'
-    begin = '2020.09.15'
-    end = '2020.09.17'
+    query = '삼성전자'
+    begin = '2020.11.09'
+    end = '2020.11.12'
     save_as = 'test.xlsx'
-    run(query, begin, end, save_as)
+    crawl(query, begin, end, save_as)
 
 
 if __name__ == '__main__':
@@ -161,4 +168,4 @@ if __name__ == '__main__':
     sort = args.sort
     field = args.field
 
-    run(query, begin, end, save_as, sort, field)
+    crawl(query, save_as, begin, end, sort, field)
