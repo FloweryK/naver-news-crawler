@@ -35,13 +35,14 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
     current_index = 1
     max_index = 2
 
-    while (current_index <= max_index) and (current_index <= 1 + 10 * page_limit):
-        print('\n' + 'crawling... %s (current_index %i/%i)' % (query, 1 + current_index // 10, 1 + max_index // 10))
+    while (current_index <= max_index) and (1 + current_index // 10 <= page_limit):
+        print('\n' + 'crawling... %s (current_page / max_page %i/%i)' % (query, 1 + current_index // 10, 1 + max_index // 10))
         url = make_url(query, sort, field, begin, end, current_index)
         print('making url', url)
 
         print('making beautifulsoup object from html')
         bsobj = make_bsobj(url, delay, timeout, trial=10)
+
         if bsobj is None:
             continue
 
@@ -71,7 +72,6 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
         max_index = get_max_index(bsobj)
         if max_index is None:
             break
-        print('next current_news_index:', current_index // 10 + 1)
 
 
 def make_url(query, sort, field, begin, end, page):
@@ -135,7 +135,7 @@ def get_attributes(bsobj):
 
 
 def get_max_index(bsobj):
-    paging = bsobj.find("div", {"class": "paging"})
+    paging = bsobj.find("div", {"class": "sc_page_inner"})
     if not paging:
         print('(WARNING!) no results found')
         return None
