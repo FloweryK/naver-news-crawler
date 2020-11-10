@@ -22,6 +22,7 @@ def crawl_query_by_unit(query, begin, end, save_dir, mode, days=None):
         print('\nstart crawling: %s from %s to %s' % (query, partial_begin_str, partial_end_str))
 
         # start crawling
+        os.makedirs(os.path.join(save_dir, query), exist_ok=True)
         save_as = os.path.join(save_dir, query, query + '_' + partial_begin_str + '-' + partial_end_str + '.xlsx')
 
         if os.path.exists(save_as):
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     crawl_query_by_unit(query='삼성전자',
                         begin=datetime.datetime(2020, 10, 3),
                         end=datetime.datetime(2020, 11, 19),
-                        save_dir='test',
+                        save_dir='test/',
                         mode='weekly')
 
 
