@@ -160,14 +160,6 @@ def get_arguments():
     return parser.parse_args()
 
 
-def test():
-    query = '삼성전자'
-    begin = '2020.11.09'
-    end = '2020.11.12'
-    save_as = 'test.xlsx'
-    crawl(query, begin, end, save_as)
-
-
 if __name__ == '__main__':
     args = get_arguments()
 
