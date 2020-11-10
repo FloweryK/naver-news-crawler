@@ -1,9 +1,0 @@
-__pycache__
-.idea
-.DS_Store
-/venv
-
-**/.DS_Store
-**/venv
-
-result/
