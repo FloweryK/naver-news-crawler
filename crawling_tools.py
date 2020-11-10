@@ -1,9 +1,6 @@
 import os
-import time
 import datetime
 from dateutil.relativedelta import relativedelta
-import pandas as pd
-from itertools import repeat
 from query_crawler import crawl
 
 
@@ -30,7 +27,10 @@ def crawl_query_by_unit(query, begin, end, save_dir, mode, days=None):
         if os.path.exists(save_as):
             print('\talready crawled. go to next step')
         else:
-            crawl(query, partial_begin_str, partial_end_str, save_as)
+            crawl(query=query,
+                  save_as=save_as,
+                  begin=partial_begin_str,
+                  end=partial_end_str)
 
         partial_end = update_partial_end(partial_end, mode, days)
 
@@ -70,6 +70,6 @@ if __name__ == '__main__':
                         begin=datetime.datetime(2020, 10, 3),
                         end=datetime.datetime(2020, 11, 19),
                         save_dir='test',
-                        mode='monthly')
+                        mode='weekly')
 
 
