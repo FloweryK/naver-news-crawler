@@ -17,7 +17,19 @@ import pandas as pd
 
 
 def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, page_limit=50):
-    # sort: 0 (관련도순), 1 (최신순), 2 (오래된순) | field: 0 (전체), 1 (제목)
+    '''
+
+    :param query: 네이버 '뉴스'란에서 검색할 검색어
+    :param save_as: 검색 결과 저장 경로
+    :param begin: '기간' -> 검색 기간 시작
+    :param end: '기간' -> 검색 기간 끝
+    :param sort: '유형' -> 0(관련도순) 1(최신순) 2(오래된순)
+    :param field: '영역' -> 0(전체) 1(제목)
+    :param delay: (옵션) 검색 리퀘스트 간격 (초)
+    :param timeout: (옵션) 타임아웃 시 기다릴 시간 (초)
+    :param page_limit: (옵션) 검색 결과에서 몇 페이지까지 갈 것인지 결정
+    :return:
+    '''
 
     # prerequisite
     df = pd.DataFrame(columns=['link', 'title', 'date', 'article'])
