@@ -52,6 +52,7 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
         for url in naver_news_urls:
             print('\topening:', url)
             news_bsobj = make_bsobj(url, delay, timeout, trial=10)
+
             if news_bsobj is None:
                 continue
 
@@ -59,8 +60,12 @@ def crawl(query, save_as, begin, end, sort=0, field=1, delay=0.5, timeout=30, pa
             if attributes is None:
                 continue
 
-            date, article, title = attributes
-            df = df.append({'link': url, 'title': title, 'date': date, 'article': article}, ignore_index=True)
+            date, article, title, newspaper = attributes
+            df = df.append({'link': url,
+                            'title': title,
+                            'newspaper': newspaper,
+                            'date': date,
+                            'article': article}, ignore_index=True)
             print('\t', title)
 
         print('saving updated df')
@@ -127,8 +132,12 @@ def get_attributes(bsobj):
         date += datetime.timedelta(hours=12 * int(splits[1] == '오후'))
         return date
 
+    def _get_newspaper(bsobj):
+        newspaper = bsobj.find("div", class_="press_logo").find('img', alt=True).get('alt')
+        return newspaper
+
     try:
-        return _get_date(bsobj), _get_article(bsobj), _get_title(bsobj)
+        return _get_date(bsobj), _get_article(bsobj), _get_title(bsobj), _get_newspaper(bsobj)
     except IndexError:
         print('(Error) crawling failed (maybe url is redirected to somewhere else)')
         return None
