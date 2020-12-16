@@ -21,7 +21,7 @@ $ python query_crawler.py --query 코로나 --begin 2020.01.01 --end 2020.11.10
 예) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 1주일 단위로 수집하기
 
 ```bash
-$ python crawling_tools --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode weekly
+$ python crawling_tools.py --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode weekly
 ```
 
 
@@ -29,7 +29,7 @@ $ python crawling_tools --query 코로나 --begin 2020.01.01 --end 2020.11.10 --
 예2) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 3일 단위로 수집하기
 
 ```bash
-$ python crawling_tools --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode interval --days 3
+$ python crawling_tools.py --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode interval --days 3
 ```
 
 
