@@ -1,14 +1,16 @@
-# 네이버 뉴스 크롤러 :green_book:
+# :green_book:네이버 뉴스 크롤러 
 
-네이버에서 키워드로 검색하면 뜨는 네이버 뉴스들의 제목, 날짜, 본문 전체를 수집해주는 크롤러입니다.
+네이버에서 키워드로 검색하면 뜨는 네이버 뉴스들의 제목, 날짜, 본문 전체, 신문사를 수집해주는 크롤러입니다.
 
 
 
-## 가능한 기능들
+## 빠른 요약
 
 #### 1. 원하는 키워드, 원하는 기간 내 네이버 뉴스를 검색하여 수집하기
 
-예) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 네이버 뉴스를 수집하기
+하루~이틀과 같은 짧은 기간 내 뉴스들만 수집하려면 `query_crawler.py`로 충분합니다.
+
+(예) '코로나'로 검색되는 2020년 12월 17일~2020년 12월 18일 사이의 네이버 뉴스를 수집하기
 
 ```bash
 $ python query_crawler.py --query 코로나 --begin 2020.01.01 --end 2020.11.10
@@ -18,7 +20,15 @@ $ python query_crawler.py --query 코로나 --begin 2020.01.01 --end 2020.11.10
 
 #### 2. 원하는 키워드, 원하는 기간 내 네이버 뉴스를 원하는 기간 단위로 검색하여 수집하기
 
-예) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 1주일 단위로 수집하기
+한 달, 혹은 그 이상의 기간 내 뉴스들을 수집하려면, `crawling_tools.py`를 사용하는게 더 좋습니다. 특히 `--mode weekly` 옵션을 사용하는걸 추천합니다.
+
+
+
+ `--mode monthly` 옵션도 괜찮지만, `--sort 0` 옵션으로 관련도 순으로 정렬하면 하루, 이틀 된 최신 기사들만 보이게 됩니다. 결과적으로 전혀 monthly한 크롤링이 아니게 돼죠.
+
+
+
+(예1) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 1주일 단위로 수집하기
 
 ```bash
 $ python crawling_tools.py --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode weekly
@@ -26,11 +36,23 @@ $ python crawling_tools.py --query 코로나 --begin 2020.01.01 --end 2020.11.10
 
 
 
-예2) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 3일 단위로 수집하기
+(예2) '코로나'로 검색되는 2020년 1월 1일~2020년 11월 10일 사이의 뉴스를 3일 단위로 수집하기
 
 ```bash
 $ python crawling_tools.py --query 코로나 --begin 2020.01.01 --end 2020.11.10 --mode interval --days 3
 ```
+
+
+
+## 작동 방식
+
+<img src="src/readme/process-01.PNG" alt="process-01" style="zoom:67%;" />
+
+<img src="src/readme/process-02.PNG" alt="process-02" style="zoom: 67%;" />
+
+<img src="src/readme/process-03.PNG" alt="process-03" style="zoom:67%;" />
+
+
 
 
 
@@ -123,6 +145,10 @@ optional arguments:
 
 
 
+
+
+
+
 #### (2) crawling_tools.py 사용법
 
 `crawling_tools.py` 는 원하는 키워드, 원하는 기간 내 네이버 뉴스를 원하는 기간 단위로 검색하여 수집하는 역할을 맡습니다. 
@@ -169,14 +195,14 @@ oid=215&aid=0000914235
 
 ##### Arguments
 
-| Argument     | type | help                              | default               |
-| ------------ | ---- | --------------------------------- | --------------------- |
-| `--query`    | str  | 검색어                            | Required              |
-| `--begin`    | str  | 검색 기간 시작                    | Required (`%Y.%m.%d`) |
-| `--end`      | str  | 검색 기간 끝                      | Required (`%Y.%m.%d`) |
-| `--save_dir` | str  | 결과 저장 디렉토리 경로           | `results`             |
-| `--mode`     | str  | 크롤링 간격 모드 설정             | Required              |
-| `--days`     | int  | interval 옵션 시 설정할 간격 (일) | `7`                   |
+| Argument     | type | help                                                    | default               |
+| ------------ | ---- | ------------------------------------------------------- | --------------------- |
+| `--query`    | str  | 검색어                                                  | Required              |
+| `--begin`    | str  | 검색 기간 시작                                          | Required (`%Y.%m.%d`) |
+| `--end`      | str  | 검색 기간 끝                                            | Required (`%Y.%m.%d`) |
+| `--save_dir` | str  | 결과 저장 디렉토리 경로                                 | `results`             |
+| `--mode`     | str  | 크롤링 간격 모드 설정 ('weekly', 'monthly', 'interval') | Required              |
+| `--days`     | int  | interval 옵션 시 설정할 간격 (일)                       | `7`                   |
 
 ```bash
 $ python crawling_tools.py -h
